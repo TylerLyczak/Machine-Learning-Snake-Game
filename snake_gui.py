@@ -72,7 +72,7 @@ def drawGame():
     global max_x
     x=0
     y=0
-    w=40
+    w=50
 
     color_iter = 0
     row_iter = 0
@@ -105,7 +105,7 @@ def drawGame():
             elif col == 2:
                 pygame.draw.rect(screen, WHITE, box)
                 eye1 = pygame.Rect(x+2, y+2, 8, 16)
-                eye2 = pygame.Rect(x+28, y+2, 8, 16)
+                eye2 = pygame.Rect(x+38, y+2, 8, 16)
                 pygame.draw.rect(screen, RED, eye1)
                 pygame.draw.rect(screen, RED, eye2)
             elif col == 3:
