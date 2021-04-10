@@ -424,7 +424,7 @@ def main():
             # If there are no open locations, the snake won the game
             if not open_location:
                 font1 = pygame.font.SysFont('didot.ttc', 72)
-                game_over = "WIN!"
+                game_over = "SNAKE WIN!"
                 img1 = font1.render(game_over, True, RED)
                 screen.blit(img1, (max_x,y_result))
                 pygame.display.update()
@@ -452,9 +452,9 @@ def main():
             result = ""
             if (move == -1):
                 move = greedyMove()
-                result = "Greedy"
+                result = "Greedy Move"
             else:
-                result = "KNN"
+                result = "KNN Move"
             
             # Display what algorithm the game used
             font1 = pygame.font.SysFont('didot.ttc', 72)
@@ -475,7 +475,7 @@ def main():
             else:
                 # Game over
                 font1 = pygame.font.SysFont('didot.ttc', 72)
-                game_over = "Game Over"
+                game_over = "GAME OVER!"
                 img1 = font1.render(game_over, True, RED)
                 screen.blit(img1, (max_x, y_result))
                 pygame.display.update()

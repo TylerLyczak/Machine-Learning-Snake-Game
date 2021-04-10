@@ -1,19 +1,20 @@
-import sys, random, time
+import sys, random, pygame, time, os
 import numpy as np
+from knn import WeightedKNN
 
-history_game_boards = np.array([])
-history_moves = np.array([])
-history_scores = np.array([])
+# Global lists to keep information about the game to store later
+history_game_boards = []
+history_moves = []
+history_scores = []
 
-clean_game_board = np.array([   [9,9,9,9,9,9,9,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,0,0,0,0,0,0,9],
-                                [9,9,9,9,9,9,9,9]])
-
+# The gameboard
+'''
+    9 = Wall
+    3 = Apple
+    2 = Snake head
+    1 = Snake body
+    0 = Open location
+'''
 game_board = np.array([ [9,9,9,9,9,9,9,9],
                         [9,0,0,0,0,0,0,9],
                         [9,0,0,0,0,0,0,9],
@@ -23,13 +24,24 @@ game_board = np.array([ [9,9,9,9,9,9,9,9],
                         [9,0,0,0,0,0,0,9],
                         [9,9,9,9,9,9,9,9]])
 
+# Dictionary that stores all the open locaitons on the gameboard
+# Used to find random locations to spawn the apple
 open_location = {}
 
+# Inital snake and apple locations, changes right as the game starts
 snake = np.array([[2,2]])
 apple = np.array([[5,5]])
 
+# Global variable to store the score of the game
 score = 0
 
+
+'''
+    def addSnake():
+        Adds the snake array to the game_board
+        snake head gets a value of 2
+        snake body gets a value of 1
+'''
 def addSnake():
     first = True
     for pos in snake:
@@ -42,41 +54,46 @@ def addSnake():
         else:
             game_board[x][y] = 1
 
+
+'''
+    def addApple():
+        Adds the apple to the gameboard
+        apple gets a value of 3
+'''
 def addApple():
     x,y = apple[0]
     game_board[x][y] = 3
     if (x,y) in open_location:
         open_location.pop((x,y))
 
+
+'''
+    def spawnApple():
+        Gets a random location from all of the open locations dictionary
+        Sets that location to the apple
+'''
 def spawnApple():
     pos = random.choice(list(open_location.items()))
     apple[0][0] = pos[0][0]
     apple[0][1] = pos[0][1]
 
+
+'''
+    def spawnSnake():
+        Gets a random location from all of the open locations dictionary
+        Sets that location to the snake
+'''
 def spawnSnake():
     pos = random.choice(list(open_location.items()))
     snake[0][0] = pos[0][0]
     snake[0][1] = pos[0][1]
 
-def addLengthToSnake(move):
-    global snake
-    if move == 0:
-        pos = np.copy(snake[-1])
-        pos[1] = pos[1]+1
-        snake = np.append(snake,[pos], axis=0)
-    elif move == 1:
-        pos = np.copy(snake[-1])
-        pos[0] = pos[0]+1
-        snake = np.append(snake,[pos], axis=0)
-    elif move == 2:
-        pos = np.copy(snake[-1])
-        pos[1] = pos[1]-1
-        snake = np.append(snake,[pos], axis=0)
-    else:
-        pos = np.copy(snake[-1])
-        pos[0] = pos[0]-1
-        snake = np.append(snake,[pos], axis = 0)
 
+'''
+    def resetBoard():
+        Resets the gameboard to its inital state
+        Adds all the open locations to the dictionary
+'''
 def resetBoard():
     for i in range(len(game_board)):
         for j in range(len(game_board[i])):
@@ -84,17 +101,24 @@ def resetBoard():
                 game_board[i][j] = 0
                 open_location[(i,j)] = True
 
+
+'''
+    def updateBoard():
+        Helper function that calls multiple functions
+'''
 def updateBoard():
-    #global game_board
-    #global clean_game_board
-    #game_board = np.copy(clean_game_board)
     resetBoard()
                 
     addSnake()
     addApple()
-    # Make open locations array?
 
 
+'''
+    def checkMovement():
+        Given a movement number, checks if the snake can move in that direction
+        based on if there is a wall or its body is in the way
+        Returns True is can move, returns False otherwise
+'''
 def checkMovement(move):
     # Left move
     if move == 0:
@@ -127,58 +151,43 @@ def checkMovement(move):
     else:
         return False
 
-def moveSnakeLeft():
+
+'''
+    def moveSnake(addToSnake, move):
+        Moves the snake array in the direction given
+        If snake ate an apple, it adds another elem to its array
+'''
+def moveSnake(addToSnake, move):
+    global snake
     oldX = snake[0][0]
     oldY = snake[0][1]
-    (snake[0])[1] = (snake[0])[1]-1
+    if move == 0:
+        (snake[0])[1] = (snake[0])[1]-1
+    elif move == 1:
+        (snake[0])[0] = (snake[0])[0]-1
+    elif move == 2:
+        (snake[0])[1] = (snake[0])[1]+1
+    else:
+        (snake[0])[0] = (snake[0])[0]+1
 
-    for i in range(1, len(snake)):
-        tempX = snake[i][0]
-        tempY = snake[i][1]
-        snake[i][0] = oldX
-        snake[i][1] = oldY
-        oldX = tempX
-        oldY = tempY
+    
+    if (addToSnake):
+        snake = np.insert(snake, 1, [oldX, oldY], axis=0)
+    else:
+        for i in range(1, len(snake)):
+            tempX = snake[i][0]
+            tempY = snake[i][1]
+            snake[i][0] = oldX
+            snake[i][1] = oldY
+            oldX = tempX
+            oldY = tempY
 
-def moveSnakeUp():
-    oldX = snake[0][0]
-    oldY = snake[0][1]
-    (snake[0])[0] = (snake[0])[0]-1
 
-    for i in range(1, len(snake)):
-        tempX = snake[i][0]
-        tempY = snake[i][1]
-        snake[i][0] = oldX
-        snake[i][1] = oldY
-        oldX = tempX
-        oldY = tempY
-
-def moveSnakeRight():
-    oldX = snake[0][0]
-    oldY = snake[0][1]
-    (snake[0])[1] = (snake[0])[1]+1
-
-    for i in range(1, len(snake)):
-        tempX = snake[i][0]
-        tempY = snake[i][1]
-        snake[i][0] = oldX
-        snake[i][1] = oldY
-        oldX = tempX
-        oldY = tempY
-
-def moveSnakeDown():
-    oldX = snake[0][0]
-    oldY = snake[0][1]
-    (snake[0])[0] = (snake[0])[0]+1
-
-    for i in range(1, len(snake)):
-        tempX = snake[i][0]
-        tempY = snake[i][1]
-        snake[i][0] = oldX
-        snake[i][1] = oldY
-        oldX = tempX
-        oldY = tempY
-
+'''
+    def checkSnakeAndApple():
+        Checks if the snake head is on the apple
+        Returns True is it is, otherwise False
+'''
 def checkSnakeAndApple():
     if (snake[0])[0] == (apple[0])[0] and (snake[0])[1] == (apple[0])[1]:
         return True
@@ -186,6 +195,11 @@ def checkSnakeAndApple():
         return False
 
 
+'''
+    def greedyMove():
+        Calculates the Euclidean distance for each movement the snake can make
+        Sorts it based on that distance, which determines its move
+'''
 def greedyMove():
     # Check which way we cant move
     snPos = snake[0]
@@ -195,10 +209,6 @@ def greedyMove():
     down = game_board[snPos[0]+1][snPos[1]]
     left = game_board[snPos[0]][snPos[1]-1]
     right = game_board[snPos[0]][snPos[1]+1]
-    #print(up)
-    #print(down)
-    #print(left)
-    #print(right)
 
     upPos = [snPos[0]-1, snPos[1]]
     downPos = [snPos[0]+1, snPos[1]]
@@ -225,53 +235,144 @@ def greedyMove():
     return 0
 
 
-def main():
+'''
+    def restartGame():
+        Adds all the of the game information into different files, used for training models
+        Resets the game state to a fresh game
+'''
+def restartGame():
+    global score
+    global snake
+    global apple
+    global history_scores
+    global history_game_boards
+    global history_moves
+
+    snake = np.array([[2,2]])
+    apple = np.array([[5,5]])
+
+    if score > 2400:
+
+        for i in history_moves:
+            #history_scores = np.append(history_scores, score)
+            history_scores.append(score)
+
+        file1 = open("board_history.txt", "a")
+        file2 = open("move_history.txt", "a")
+        file3 = open("score_history.txt", "a")
+
+        
+        for arr in history_game_boards:
+            #print(arr)
+            for i in range(len(arr)):
+                #file1.writelines(str(arr[i]))
+                file1.writelines("[")
+                for j in range(len(arr[i])):
+                    temp = str(arr[i][j])
+                    file1.writelines(temp)
+                    if j != len(arr[i])-1:
+                        file1.writelines(";")
+                file1.writelines("]")
+                if i != len(arr)-1:
+                    file1.writelines(",")
+            file1.writelines("|\n")
+        
+        for row in history_moves:
+            file2.writelines(str(row)+";\n")
+
+        for row in history_scores:
+            file3.writelines(str(row)+";\n")
+
+        file1.close()
+        file2.close()
+        file3.close()
+
+    score = 0
+    history_game_boards = []
+    history_moves = []
+    history_scores = []
+
     resetBoard()
-    spawnApple()
-    spawnSnake()
+
+
+'''
+    def main():
+        Runs two different while 1 loops
+        The inner while loop controls the game
+            After the snake loses or wins, it breaks
+        The outer while loop resets the game
+'''
+def main():
+    global history_game_boards
+    global history_moves
+
     while 1:
-        print(chr(27) + "[2J")
-        # Check if snake head is on apple
-        if checkSnakeAndApple():
-            # Respawn apple
-            spawnApple()
+        # Reset the game state to a new state
+        resetBoard()
+        spawnApple()
+        spawnSnake()
+        weightedKNN = WeightedKNN(3)
+        addToSnake = False
 
-            # Add length to snake
-            addLengthToSnake(move)
+        # Runs the game until somebody wins or loses
+        while 1:
+            print(chr(27) + "[2J")
 
-            # Add to score
-            global score
-            score+=100
+            # If there are no open locations, the snake won the game
+            if not open_location:
+                print("SNAKE WIN!")
+                break
+            
+            # Check if the snake head and the apple are in the same location
+            if checkSnakeAndApple():
+                # Respawn apple
+                spawnApple()
 
-        updateBoard()
-        print("Score: " + str(score))
-        print(game_board)
+                # Add length to snake
+                addToSnake = True
 
-        # Greedy algorithm decides where to move based on board
-        move = greedyMove()
-        print("move: " + str(move))
+                # Add to score
+                global score
+                score+=100
+            
+            # Update the board and draw the game
+            updateBoard()
 
-        np.append(history_game_boards, game_board)
-        np.append(history_moves, move)
-        np.append(history_scores, score)
+            print("Score: " + str(score))
+            print(game_board)
 
-        if checkMovement(move):
-            print("Can move")
-            if (move == 0):
-                moveSnakeLeft()
-            elif (move == 1):
-                moveSnakeUp()
-            elif (move == 2):
-                moveSnakeRight()
+            # Use KNN to get the best move
+            # If no move, use greedy
+            move = weightedKNN.findMove(game_board)
+            result = ""
+            if (move == -1):
+                move = greedyMove()
+                result = "Greedy Move"
             else:
-                moveSnakeDown()
-        else:
-            # Game over
-            print("Game over")
-            x = 0
-            while(1):
-                x+=1
-        updateBoard()
-        time.sleep(.5)
+                result = "KNN Move"
+            
+            # Display what algorithm the game used
+            print(result)
+
+            # Append the game board and the move it choose
+            history_game_boards.append(np.copy(game_board))
+            history_moves.append(move)
+
+            # Check if the snake can go in that direction
+            # If it can, then move the snake
+            # Else, it lost
+            if checkMovement(move):
+                moveSnake(addToSnake, move)
+                addToSnake = False
+            else:
+                # Game over
+                print("GAME OVER!")
+                break
+
+            # Update the board
+            updateBoard()
+            time.sleep(1)
+        restartGame()
+        time.sleep(5)
 
 main()
