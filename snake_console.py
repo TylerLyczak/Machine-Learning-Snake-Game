@@ -122,6 +122,7 @@ def updateBoard():
 def checkMovement(move):
     # Left move
     if move == 0:
+        # Check gameboard
         pos = snake[0]
         if game_board[pos[0]][pos[1]-1] == 9 or game_board[pos[0]][pos[1]-1] == 1:
             return False
@@ -129,6 +130,7 @@ def checkMovement(move):
             return True
     # Up Move
     elif move == 1:
+        # Check gameboard
         pos = snake[0]
         if game_board[pos[0]-1][pos[1]] == 9 or game_board[pos[0]-1][pos[1]] == 1:
             return False
@@ -142,7 +144,9 @@ def checkMovement(move):
             return False
         else:
             return True
+    # Down move
     elif move == 3:
+        # Check gameboard
         pos = snake[0]
         if game_board[pos[0]+1][pos[1]] == 9 or game_board[pos[0]+1][pos[1]] == 1:
             return False
@@ -228,7 +232,6 @@ def greedyMove():
 
     # Check the move that is the closest that is not a 9 or 1
     for tup in rank_sort:
-        #print(tup)
         if tup[1] != 1 and tup[1] != 9:
             return tup[0]
     
@@ -251,10 +254,9 @@ def restartGame():
     snake = np.array([[2,2]])
     apple = np.array([[5,5]])
 
+    # If we got a score worth keeping, then add it to the files
     if score > 2400:
-
         for i in history_moves:
-            #history_scores = np.append(history_scores, score)
             history_scores.append(score)
 
         file1 = open("board_history.txt", "a")
@@ -263,9 +265,7 @@ def restartGame():
 
         
         for arr in history_game_boards:
-            #print(arr)
             for i in range(len(arr)):
-                #file1.writelines(str(arr[i]))
                 file1.writelines("[")
                 for j in range(len(arr[i])):
                     temp = str(arr[i][j])
