@@ -19,11 +19,11 @@ python snake_console.py
 
 ## Algorithms
 
-# Greedy
+### Greedy
 The game uses a greedy algorithm based of the Euclidean distance if all else fails
 or if the other algorithms fail
 
-# KNN
+### KNN
 The game will use its previous data based of saved game data and the current gameboard
 to figure out which move it will make.
 
