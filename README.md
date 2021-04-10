@@ -9,6 +9,7 @@ There are two different ways to run it, with a GUI or through terminal
 
 To run the GUI version with pygame, use:
 ```
+pip install pygame
 python snake_gui.py
 ```
 
