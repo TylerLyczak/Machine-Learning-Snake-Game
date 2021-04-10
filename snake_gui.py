@@ -470,7 +470,6 @@ def main():
             # If it can, then move the snake
             # Else, it lost
             if checkMovement(move):
-                #print("Can move")
                 moveSnake(addToSnake, move)
                 addToSnake = False
             else:
