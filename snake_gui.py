@@ -350,7 +350,6 @@ def restartGame():
 
     if score > 2400:
 
-
         for i in history_moves:
             #history_scores = np.append(history_scores, score)
             history_scores.append(score)
@@ -407,18 +406,22 @@ def main():
     CLOCK = pygame.time.Clock()
 
     while 1:
+        # Reset the game state to a new state
         resetBoard()
         spawnApple()
         spawnSnake()
         weightedKNN = WeightedKNN(3)
         addToSnake = False
+
+        # Runs the game until somebody wins or loses
         while 1:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
-
                     pygame.quit()
                     sys.exit()
+
+            # If there are no open locations, the snake won the game
             if not open_location:
                 font1 = pygame.font.SysFont('didot.ttc', 72)
                 game_over = "WIN!"
@@ -427,6 +430,7 @@ def main():
                 pygame.display.update()
                 break
             
+            # Check if the snake head and the apple are in the same location
             if checkSnakeAndApple():
                 # Respawn apple
                 spawnApple()
@@ -438,11 +442,12 @@ def main():
                 global score
                 score+=100
             
+            # Update the board and draw the game
             updateBoard()
             drawGame()
 
-
-            # Greedy algorithm decides where to move based on board
+            # Use KNN to get the best move
+            # If no move, use greedy
             move = weightedKNN.findMove(game_board)
             result = ""
             if (move == -1):
@@ -451,14 +456,19 @@ def main():
             else:
                 result = "KNN"
             
+            # Display what algorithm the game used
             font1 = pygame.font.SysFont('didot.ttc', 72)
             img1 = font1.render(result, True, WHITE)
             screen.blit(img1, (max_x,y_move))
             pygame.display.update()
 
+            # Append the game board and the move it choose
             history_game_boards.append(np.copy(game_board))
             history_moves.append(move)
 
+            # Check if the snake can go in that direction
+            # If it can, then move the snake
+            # Else, it lost
             if checkMovement(move):
                 #print("Can move")
                 moveSnake(addToSnake, move)
@@ -472,6 +482,7 @@ def main():
                 pygame.display.update()
                 break
 
+            # Update the board
             updateBoard()
             pygame.display.update()
             CLOCK.tick(20)
